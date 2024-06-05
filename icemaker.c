@@ -116,6 +116,8 @@ int ICE_OPERATION = 0;           // To update whether the system will go to ice 
 void TIM1_BRK_UP_TRG_COM_IRQHandler(void) {
     if (TIM1->SR & TIM_SR_UIF) {
 			TIM1->SR &= ~TIM_SR_UIF;
+			uart_send_char(" rtime = ");
+			uart_send_num(rtime);
 			
 				vtime++;
 			
@@ -149,7 +151,7 @@ void motor_control(int dir){            	// dir= direction of rotation
 		
 		GPIOA -> ODR &=~ (1<<5);
 		GPIOA ->BSRR &=~ (1<<5); // PA3  low
-		//uart_send_char("M1 F");
+		uart_send_char("  M_F  ");
 	}
 	
 	else if(dir == 2){         // M1 reverse
@@ -158,7 +160,7 @@ void motor_control(int dir){            	// dir= direction of rotation
 		
 		GPIOA -> ODR |= (1<<5);
 		GPIOA ->BSRR |= (1<<5);  // PA3 high
-		//uart_send_char("M1 R");
+		uart_send_char("  M_R  ");
 	}
 	
 	else if (dir == 3){        // M1 stop
@@ -167,7 +169,7 @@ void motor_control(int dir){            	// dir= direction of rotation
 		
 		GPIOA -> ODR &=~ (1<<5);
 		GPIOA ->BSRR &=~ (1<<5); // PA3  low
-		//uart_send_char("M1 S");
+		uart_send_char("  M_S  ");
 	}
 }
 
@@ -219,11 +221,11 @@ void valve_config(void){
 		//GPIOB ->BSRR &=~ (1<<7);               // PB7 low for turning valve low
 		VALVE_FILLED_FLAG = 1;
 		
-		uart_send_char("valve filled");
+		uart_send_char(" vfilled ");
 	}
 	else {
 		VALVE_FILLED_FLAG = 0;
-		uart_send_char("valve is not filled");
+		uart_send_char(" !vfilled ");
 	}
 }
 
@@ -233,11 +235,11 @@ void ice_box_rotation(void){
 	uart_send_num(hall_feedback());
 	uart_send_char("\n\r");
 	
-	if ((rtime >= 0)&&(rtime <= 2)){
+	if ((rtime >= 0)&&(rtime <= 3)){
 		motor_control(1);
 	}
 	if((hall_feedback() == 0)){
-		if((rtime > 2)&&(rtime <= 8)){
+		if((rtime > 3)&&(rtime <= 8)){
 			motor_control(1);             // Motor1 rotating forward
 		}
 		if((rtime>8)&&(rtime<=10)){
@@ -262,7 +264,7 @@ void ice_box_rotation(void){
 		}
 	}
 	else if((hall_feedback() == 1)){     // Hall feedback = 1, that means motor should be run in reverse
-		uart_send_char("Hall feedback = 1");
+		uart_send_char(" Hall=1 ");
 		if ((rtime > 3)&&(rtime <= 5)){
 			motor_control(3);            // Turn motor off for 2 seconds
 		}
@@ -291,11 +293,11 @@ void ice_box_rotation(void){
 // Check whether ice is ready or not
 
 void ice_temp_check(void){
-	if(temperature() >= 240){
+	if(temperature() >= 250){
 		ICE_OPERATION = 1;
 	}
-	else if(temperature() < 240 ){
-		ICE_OPERATION = 0;
+	else if(temperature() < 250 ){
+		//ICE_OPERATION = 0;
 	}
 }
 
@@ -303,31 +305,35 @@ void ice_temp_check(void){
 
 void ice_making_operation(void){
 	
-	
+
+	uart_send_char("   HALL FEEDBACK   ");
+	uart_send_num(hall_f);
+	uart_send_char("    ");
 	
 	if((IB == 0)&&(IC == 0)){     // Step-1
 			valve_config();
-			uart_send_char("configuiring valve");
+			uart_send_char("vconf");
 			uart_send_char("\n\r");
 	}
 	
 	if(VALVE_FILLED_FLAG == 1){  // Step-2
 		ice_temp_check();
-		uart_send_char("checking ice temp  ");
+		uart_send_char(" tcheck ");
 		uart_send_num(temperature());
 		uart_send_char("\n\r");
 	}
 	
+	
 	if(ICE_OPERATION == 1){      // Step-3
 		ice_box_rotation();
-		uart_send_char("rotating ice box");
+		uart_send_char(" ib rotat ");
 		uart_send_char("\n\r");
 	}
 
-	uart_send_char(" rtime= ");
-	uart_send_num(rtime);
-	uart_send_char(" vtime= ");
-	uart_send_num(vtime);
-	uart_send_char("\n\r");
+	//uart_send_char(" rtime= ");
+	//uart_send_num(rtime);
+	//uart_send_char(" vtime= ");
+	//uart_send_num(vtime);
+	//uart_send_char("\n\r");
 	
 }

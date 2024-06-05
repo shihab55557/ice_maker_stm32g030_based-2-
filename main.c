@@ -22,7 +22,7 @@ int main(void) {
     while (1) {
 			//ice_box_rotation();
 			ice_making_operation();
-			delay(1000);
+			delay(100);
     }
 }
 
